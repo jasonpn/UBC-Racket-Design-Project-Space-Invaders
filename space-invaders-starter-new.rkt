@@ -1,6 +1,6 @@
 ;; The first three lines of this file were inserted by DrRacket. They record metadata
 ;; about the language level of this file in a form that our tools can easily process.
-#reader(lib "htdp-beginner-abbr-reader.ss" "lang")((modname space-invaders-starter) (read-case-sensitive #t) (teachpacks ()) (htdp-settings #(#t constructor repeating-decimal #f #t none #f () #f)))
+#reader(lib "htdp-beginner-abbr-reader.ss" "lang")((modname space-invaders-starter-new) (read-case-sensitive #t) (teachpacks ()) (htdp-settings #(#t constructor repeating-decimal #f #t none #f () #f)))
 (require 2htdp/universe)
 (require 2htdp/image)
 
@@ -152,7 +152,6 @@
 (define G3 (make-game (list I1 I2) (list M1 M2) T1))
 
 
-
 ;; ===============================
 ;; Functions:
 
@@ -168,60 +167,19 @@
     )
   )
 
-
 ;; Game -> Game
 ;; produce next state of game, creating and moving items forward
-(check-random (next-game G0) (make-game empty empty (make-tank 152 1)))
-(check-random (next-game G2) (make-game (list (make-invader (+ 150 (* 12 INVADER-X-SPEED))
-                                                      (+ 100 (* 12 INVADER-Y-SPEED)) 12))
-                                        (list (make-missile (missile-x (make-missile 150 300))
-                                                      (- (missile-y (make-missile 150 300)) MISSILE-SPEED)))
-                                        (make-tank 52 1)))
-
+;; unable to test due to random condition to make invaders
 
 ;(define (next-game g) T0) ;stub
 
 ;<template from Game>
-
 (define (next-game g)
-  (invade
-   (next-move
-    (collision g)))
+  (make-game (make-invaders (next-invaders (remove-invaders (game-invaders g)(game-missiles g))))
+             (next-missiles (remove-missiles (game-missiles g)(game-invaders g)))
+             (next-tank (game-tank g)))
   )
 
-;; Game -> Game
-;; remove missile and invader from the game if they are within HIT-RANGE of each other
-
-;(define (collision g) G0) ;stub
-
-(define (collision g)
-  (make-game (remove-invaders (game-invaders g)(game-missiles g))
-             (remove-missiles (game-missiles g)(game-invaders g))
-             (game-tank g)))
-
-;; Game -> Game
-;; produce next state of invaders, missiles, and tank
-
-;(define (next-move g) G0) ;stub
-
-(define (next-move g)
-  (make-game (next-invaders (game-invaders g))
-             (next-missiles (game-missiles g))
-             (next-tank (game-tank g))))
-
-;; Game -> Game
-;; add invaders randomly to the game based on INVADE-RATE
-
-;(define (invade g) G0) ;stub
-
-(define (invade g)
-  (if (< (random INVADE-RATE) 3)
-      (make-game (make-invaders (game-invaders g))
-                 (game-missiles g)
-                 (game-tank g))
-      g)
-  )
-     
 ;; Game -> Image
 ;; render the game onto BACKGROUND
 (check-expect (render-game G0) (place-image TANK (tank-x T0) TANK-Y BACKGROUND))
@@ -324,7 +282,7 @@
 
 ;(define (hit-invader? i lom) true) ;stub
 
-;<template from Invader w/ extra atomic parameter>
+;<template from Invader w/ extra list parameter>
 (define (hit-invader? i lom)
   (cond [(empty? lom) false]
         [else
@@ -386,7 +344,7 @@
   )
 
 ;; ListOfInvaders -> ListOfInvaders
-;; produce a list containing only those invaders in loi that are onscreen
+;; produce a list containing only those invaders in loi that are onscreen (within [0, WIDTH])
 (check-expect (onscreen-invaders LOI0) empty)
 (check-expect (onscreen-invaders LOI2) LOI2)
 (check-expect (onscreen-invaders (list (make-invader (+ 1 WIDTH) 100 12) I1 I2)) (list (make-invader WIDTH 100 -12) I1 I2))
@@ -442,15 +400,16 @@
   (place-image INVADER (invader-x i) (invader-y i) img))
 
 ;; ListOfInvaders -> ListOfInvaders
-;; add invaders to ListOfInvaders randomly based on INVADER-RATE (invaders start at random x position within WIDTH and y = 0, with random direction)
-(check-random (make-invaders LOI0) (list (make-invader (random WIDTH) 0 (random-dir (random 2)))))
-(check-random (make-invaders LOI2) (list (make-invader (random WIDTH) 0 (random-dir (random 2))) I1 I2 I3))
+;; add invaders to ListOfInvaders randomly based on INVADER-RATE (invaders start at random x position within WIDTH and y = 0 with random direction)
+;; unable to test due to random condition
 
 ;(define (make-invaders loi) LOI0) ;stub
 
 ;<template from ListOfInvaders>
 (define (make-invaders loi)
-  (cons (make-invader (random WIDTH) 0 (random-dir (random 2))) loi))
+  (if (< (random INVADE-RATE) 3)
+      (cons (make-invader (random WIDTH) 0 (random-dir (random 2))) loi)        
+      loi))
 
 ;; Integer -> Integer
 ;; produce -1 if given value is odd, else produce 1
